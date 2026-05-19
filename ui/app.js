@@ -221,22 +221,12 @@ function renderDocList() {
   }
   list.innerHTML = documents.map(doc => `
     <div class="doc-card">
-      <div class="doc-info">
-        <h3><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${doc.filename}</h3>
-        <div class="doc-meta">
-          <span class="badge bg-light text-secondary border me-1">${doc.num_pages} trang</span>
-          <span class="badge bg-light text-secondary border me-1">${doc.num_chunks} chunks</span>
-          <span class="text-muted">${new Date(doc.uploaded_at).toLocaleString("vi-VN")}</span>
-        </div>
-      </div>
+      <span class="doc-name"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${doc.filename}</span>
       <div class="doc-actions">
-        <button class="btn btn-sm btn-outline-danger" onclick="viewPdf('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
-          <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+        <button class="btn btn-sm btn-primary rounded-pill" onclick="viewPdf('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
+          <i class="bi bi-eye me-1"></i>Xem PDF
         </button>
-        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument('${doc.doc_id}')">
-          <i class="bi bi-eye me-1"></i>Xem
-        </button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
+        <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteDocument('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -601,6 +591,31 @@ document.getElementById("ext-btn").addEventListener("click", async () => {
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.getElementById("filter-select-all").addEventListener("click", selectAllDocs);
 document.getElementById("filter-clear-all").addEventListener("click", clearAllDocs);
+
+document.getElementById("qa-clear-btn").addEventListener("click", () => {
+  qaConversation = [];
+  document.getElementById("chat-box").innerHTML = "";
+});
+
+document.getElementById("sum-clear-btn").addEventListener("click", () => {
+  const r = document.getElementById("sum-result");
+  r.innerHTML = "";
+  r.classList.add("hidden");
+});
+
+document.getElementById("ext-clear-btn").addEventListener("click", () => {
+  const r = document.getElementById("ext-result");
+  r.innerHTML = "";
+  r.classList.add("hidden");
+});
+
+document.getElementById("sum-file").addEventListener("change", e => {
+  document.getElementById("sum-file-name").textContent = e.target.files[0]?.name ?? "Chưa chọn file";
+});
+document.getElementById("ext-file").addEventListener("change", e => {
+  document.getElementById("ext-file-name").textContent = e.target.files[0]?.name ?? "Chưa chọn file";
+});
+
 checkHealth();
 setInterval(checkHealth, 30000);
 loadDocuments();

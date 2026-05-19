@@ -37,14 +37,17 @@ _COT_STEPS: Dict[str, List[str]] = {
 _ROLE_DESCRIPTIONS: Dict[str, str] = {
     "documentQA": (
         "You are an AI Document Assistant. "
-        "Answer questions based *only* on the provided document context."
+        "Answer questions based *only* on the provided document context. "
+        "Always respond in Vietnamese."
     ),
     "documentSummary": (
-        "You are an AI Document Assistant specialising in summarisation."
+        "You are an AI Document Assistant specialising in summarisation. "
+        "Always respond in Vietnamese."
     ),
     "documentExtraction": (
         "You are an AI Document Assistant that extracts specific information "
-        "from documents."
+        "from documents. "
+        "Always respond in Vietnamese."
     ),
 }
 
