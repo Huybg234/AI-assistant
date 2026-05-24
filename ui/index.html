@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Document Assistant</title>
+  <title>Chatbot Trợ Lý Đọc Hiểu Tài Liệu</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css" />
@@ -13,28 +13,31 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <i class="bi bi-file-earmark-text logo-icon"></i>
-        <h1>AI Document<br/>Assistant</h1>
+        <i class="bi bi-robot logo-icon"></i>
+        <h1>Chatbot Trợ Lý<br/>Đọc Hiểu Tài Liệu</h1>
       </div>
 
       <nav class="nav">
         <button class="nav-btn active" data-tab="upload">
-          <i class="bi bi-cloud-upload"></i> Upload PDF
+          <i class="bi bi-cloud-upload"></i> Nạp Tài Liệu
         </button>
         <button class="nav-btn" data-tab="documents">
-          <i class="bi bi-collection"></i> Tài liệu
+          <i class="bi bi-collection"></i> Kho Tài Liệu
         </button>
         <button class="nav-btn" data-tab="qa">
-          <i class="bi bi-chat-dots"></i> Hỏi & Đáp
+          <i class="bi bi-chat-dots"></i> Chat Hỏi Đáp
         </button>
         <button class="nav-btn" data-tab="summarize">
-          <i class="bi bi-file-text"></i> Tóm tắt
+          <i class="bi bi-file-text"></i> Tóm Tắt
         </button>
         <button class="nav-btn" data-tab="extract">
-          <i class="bi bi-search"></i> Trích xuất
+          <i class="bi bi-search"></i> Trích Xuất
         </button>
       </nav>
 
+      <div class="sidebar-project-label">
+        <i class="bi bi-mortarboard-fill me-1"></i>Đề tài Nghiên cứu Khoa học
+      </div>
       <div class="sidebar-footer">
         <div id="health-indicator" class="health-dot checking"></div>
         <span id="health-text">Đang kết nối...</span>
@@ -48,19 +51,19 @@
       <section id="tab-upload" class="tab active">
         <div class="tab-header">
           <div>
-            <h2>Upload & Ingest PDF</h2>
-            <p class="text-muted mb-0">Tải lên nhiều file PDF cùng lúc để xử lý và lưu vào cơ sở dữ liệu vector.</p>
+            <h2>Nạp Tài Liệu</h2>
+            <p class="text-muted mb-0">Tải lên tài liệu để chatbot phân tích, đọc hiểu và sẵn sàng trả lời câu hỏi.</p>
           </div>
         </div>
 
         <div class="upload-area" id="drop-zone">
           <div class="upload-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
-          <p class="fw-semibold mb-2">Kéo thả file PDF vào đây hoặc</p>
+          <p class="fw-semibold mb-2">Kéo thả file vào đây hoặc</p>
           <label class="btn btn-primary px-4" for="pdf-input">
             <i class="bi bi-folder2-open me-2"></i>Chọn file
           </label>
-          <input type="file" id="pdf-input" accept="application/pdf" multiple hidden />
-          <p class="hint mt-2 mb-0">Hỗ trợ chọn nhiều file PDF cùng lúc</p>
+          <input type="file" id="pdf-input" accept=".pdf,.doc,.docx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf" multiple hidden />
+          <p class="hint mt-2 mb-0">Hỗ trợ: PDF, DOCX, DOC, TXT, RTF — nhiều file cùng lúc</p>
         </div>
 
         <!-- File queue -->
@@ -82,7 +85,7 @@
       <section id="tab-documents" class="tab">
         <div class="tab-header">
           <div>
-            <h2>Danh sách tài liệu</h2>
+            <h2>Kho Tài Liệu</h2>
           </div>
           <button class="btn btn-outline-primary rounded-pill btn-sm" id="refresh-docs">
             <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
@@ -91,66 +94,69 @@
         <div id="doc-list" class="doc-list">
           <div class="empty-msg">
             <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
-            Chưa có tài liệu nào. Hãy upload PDF trước.
+            Chưa có tài liệu nào. Hãy nạp tài liệu trước.
           </div>
         </div>
 
-        <!-- Document detail modal -->
-        <div id="doc-modal" class="modal hidden">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3 id="modal-title">Chi tiết tài liệu</h3>
-              <button class="btn-close" id="close-modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-              <div id="modal-meta" class="meta-grid mb-3"></div>
-              <h6 class="text-uppercase text-muted fw-bold small mb-2">Nội dung (Pages)</h6>
-              <div id="modal-pages" class="scrollable-box"></div>
-              <h6 class="text-uppercase text-muted fw-bold small mt-3 mb-2">Chunks</h6>
-              <div id="modal-chunks" class="scrollable-box"></div>
+          <!-- Document detail modal -->
+          <div id="doc-modal" class="modal hidden">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="modal-title">Chi tiết tài liệu</h3>
+                <button class="btn-close" id="close-modal" aria-label="Đóng"></button>
+              </div>
+              <div class="modal-body">
+                <div id="modal-meta" class="meta-grid mb-3"></div>
+                <h6 class="text-uppercase text-muted fw-bold small mb-2">Nội dung (Pages)</h6>
+                <div id="modal-pages" class="scrollable-box"></div>
+                <h6 class="text-uppercase text-muted fw-bold small mt-3 mb-2">Chunks</h6>
+                <div id="modal-chunks" class="scrollable-box"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- PDF Viewer modal -->
-        <div id="pdf-modal" class="modal hidden">
-          <div class="modal-content pdf-modal-content">
-            <div class="modal-header">
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
-                <h3 id="pdf-modal-title" class="mb-0">Xem PDF</h3>
+          <!-- File Viewer modal -->
+          <div id="pdf-modal" class="modal hidden">
+            <div class="modal-content pdf-modal-content">
+              <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                  <i id="pdf-modal-icon" class="bi bi-file-earmark-text fs-5"></i>
+                  <h3 id="pdf-modal-title" class="mb-0">Xem tài liệu</h3>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <a id="pdf-download-btn" href="#" class="btn btn-sm btn-outline-primary" download>
+                    <i class="bi bi-download me-1"></i>Tải về
+                  </a>
+                  <button class="btn-close" id="close-pdf-modal" aria-label="Đóng"></button>
+                </div>
               </div>
-              <div class="d-flex align-items-center gap-2">
-                <a id="pdf-download-btn" href="#" class="btn btn-sm btn-outline-primary" download>
-                  <i class="bi bi-download me-1"></i>Tải về
-                </a>
-                <button class="btn-close" id="close-pdf-modal" aria-label="Đóng"></button>
-              </div>
-            </div>
-            <div class="pdf-viewer-body">
-              <div id="pdf-loading" class="pdf-loading">
-                <div class="spinner-border text-primary mb-3"></div>
-                <p class="text-muted">Đang tải PDF...</p>
-              </div>
-              <iframe id="pdf-iframe" class="pdf-iframe hidden" title="PDF Viewer"></iframe>
-              <div id="pdf-error" class="pdf-error hidden">
-                <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3 d-block"></i>
-                <p class="text-muted mb-3">Không thể hiển thị PDF trong trình duyệt.</p>
-                <a id="pdf-fallback-btn" href="#" class="btn btn-primary" target="_blank">
-                  <i class="bi bi-box-arrow-up-right me-1"></i>Mở trong tab mới
-                </a>
+              <div class="pdf-viewer-body">
+                <div id="pdf-loading" class="pdf-loading">
+                  <div class="spinner-border text-primary mb-3"></div>
+                  <p class="text-muted">Đang tải tài liệu...</p>
+                </div>
+                <iframe id="pdf-iframe" class="pdf-iframe hidden" title="File Viewer"></iframe>
+                <div id="pdf-error" class="pdf-error hidden">
+                  <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3 d-block"></i>
+                  <p class="text-muted mb-3">Không thể hiển thị tài liệu trong trình duyệt.</p>
+                  <a id="pdf-fallback-btn" href="#" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Mở trong tab mới
+                  </a>
+                  <a id="pdf-download-btn2" href="#" class="btn btn-outline-secondary ms-2" download>
+                    <i class="bi bi-download me-1"></i>Tải về
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
       </section>
 
       <!-- ── Q&A Tab ────────────────────────────────────── -->
       <section id="tab-qa" class="tab">
         <div class="tab-header">
           <div>
-            <h2>Hỏi & Đáp</h2>
-            <p class="text-muted mb-0 small">Chọn tài liệu để hỏi đáp bên dưới</p>
+            <h2>Chat Hỏi Đáp</h2>
+            <p class="text-muted mb-0 small">Chatbot đọc hiểu và trả lời câu hỏi dựa trên nội dung tài liệu</p>
           </div>
           <button class="btn btn-sm btn-outline-danger rounded-pill" id="qa-clear-btn" title="Xóa lịch sử chat">
             <i class="bi bi-trash me-1"></i>Xóa chat
@@ -176,7 +182,7 @@
             </div>
             <!-- Document chips rendered by JS -->
             <div class="doc-chips-empty text-muted small" id="doc-chips-empty">
-              <i class="bi bi-info-circle me-1"></i>Chưa có tài liệu. Hãy upload PDF trước.
+                <i class="bi bi-info-circle me-1"></i>Chưa có tài liệu. Hãy nạp tài liệu trước.
             </div>
           </div>
           <!-- Summary bar -->
@@ -188,7 +194,7 @@
 
         <div id="chat-box" class="chat-box"></div>
         <div class="chat-input-area">
-          <textarea id="qa-input" class="form-control" placeholder="Nhập câu hỏi của bạn..." rows="2"></textarea>
+          <textarea id="qa-input" class="form-control" placeholder="Đặt câu hỏi cho chatbot về nội dung tài liệu..." rows="2"></textarea>
           <button class="btn btn-primary send-btn" id="qa-send" title="Gửi (Enter)">
             <i class="bi bi-send-fill"></i>
           </button>
@@ -198,7 +204,7 @@
       <!-- ── Summarize Tab ──────────────────────────────── -->
       <section id="tab-summarize" class="tab">
         <div class="tab-header">
-          <h2>Tóm tắt tài liệu</h2>
+          <h2>Tóm Tắt Tài Liệu</h2>
         </div>
         <div class="card border-0 shadow-sm">
           <div class="card-body p-4">
@@ -210,14 +216,15 @@
             </div>
             <div class="divider">hoặc</div>
             <div class="mb-4">
-              <label class="form-label fw-semibold">Upload file PDF mới:</label>
+              <label class="form-label fw-semibold">Upload file tài liệu mới:</label>
               <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="document.getElementById('sum-file').click()">
                   <i class="bi bi-folder2-open me-1"></i>Chọn file
                 </button>
                 <span id="sum-file-name" class="text-muted small">Chưa chọn file</span>
               </div>
-              <input type="file" id="sum-file" accept="application/pdf" hidden />
+              <input type="file" id="sum-file" accept=".pdf,.doc,.docx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf" hidden />
+              <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Hỗ trợ: PDF, DOCX, DOC, TXT, RTF</p>
             </div>
             <div class="d-flex gap-2 mt-2">
               <button class="btn btn-primary rounded-pill px-4" id="sum-btn">
@@ -235,7 +242,7 @@
       <!-- ── Extract Tab ────────────────────────────────── -->
       <section id="tab-extract" class="tab">
         <div class="tab-header">
-          <h2>Trích xuất thông tin</h2>
+          <h2>Trích Xuất Thông Tin</h2>
         </div>
         <div class="card border-0 shadow-sm">
           <div class="card-body p-4">
@@ -252,14 +259,15 @@
             </div>
             <div class="divider">hoặc</div>
             <div class="mb-4">
-              <label class="form-label fw-semibold">Upload file PDF mới:</label>
+              <label class="form-label fw-semibold">Upload file tài liệu mới:</label>
               <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="document.getElementById('ext-file').click()">
                   <i class="bi bi-folder2-open me-1"></i>Chọn file
                 </button>
                 <span id="ext-file-name" class="text-muted small">Chưa chọn file</span>
               </div>
-              <input type="file" id="ext-file" accept="application/pdf" hidden />
+              <input type="file" id="ext-file" accept=".pdf,.doc,.docx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf" hidden />
+              <p class="text-muted small mt-1 mb-0"><i class="bi bi-info-circle me-1"></i>Hỗ trợ: PDF, DOCX, DOC, TXT, RTF</p>
             </div>
             <div class="d-flex gap-2 mt-2">
               <button class="btn btn-primary rounded-pill px-4" id="ext-btn">

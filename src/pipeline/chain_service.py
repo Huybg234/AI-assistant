@@ -38,16 +38,16 @@ _ROLE_DESCRIPTIONS: Dict[str, str] = {
     "documentQA": (
         "You are an AI Document Assistant. "
         "Answer questions based *only* on the provided document context. "
-        "Always respond in Vietnamese."
+        "Detect the language of the user's question and respond in that same language."
     ),
     "documentSummary": (
         "You are an AI Document Assistant specialising in summarisation. "
-        "Always respond in Vietnamese."
+        "Detect the language of the user's request and respond in that same language."
     ),
     "documentExtraction": (
         "You are an AI Document Assistant that extracts specific information "
         "from documents. "
-        "Always respond in Vietnamese."
+        "Detect the language of the user's request and respond in that same language."
     ),
 }
 

@@ -65,6 +65,42 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => switchTab(btn.dataset.tab));
 });
 
+// ── File type helpers ─────────────────────────────────────────────────────────
+const SUPPORTED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.rtf'];
+
+function getFileExt(file) {
+  return (file.name || '').toLowerCase().split('.').pop();
+}
+
+function isSupportedFile(file) {
+  const ext = '.' + getFileExt(file);
+  return SUPPORTED_EXTENSIONS.includes(ext);
+}
+
+function getFileIcon(filename) {
+  const ext = (filename || '').toLowerCase().split('.').pop();
+  switch (ext) {
+    case 'pdf':  return '<i class="bi bi-file-earmark-pdf text-danger me-2"></i>';
+    case 'docx':
+    case 'doc':  return '<i class="bi bi-file-earmark-word text-primary me-2"></i>';
+    case 'txt':  return '<i class="bi bi-file-earmark-text text-secondary me-2"></i>';
+    case 'rtf':  return '<i class="bi bi-file-earmark-richtext text-warning me-2"></i>';
+    default:     return '<i class="bi bi-file-earmark me-2"></i>';
+  }
+}
+
+function getFileIconClass(filename) {
+  const ext = (filename || '').toLowerCase().split('.').pop();
+  switch (ext) {
+    case 'pdf':  return 'bi bi-file-earmark-pdf text-danger';
+    case 'docx':
+    case 'doc':  return 'bi bi-file-earmark-word text-primary';
+    case 'txt':  return 'bi bi-file-earmark-text text-secondary';
+    case 'rtf':  return 'bi bi-file-earmark-richtext text-warning';
+    default:     return 'bi bi-file-earmark';
+  }
+}
+
 // ── Upload (multi-file) ───────────────────────────────────────────────────────
 const dropZone  = document.getElementById("drop-zone");
 const pdfInput  = document.getElementById("pdf-input");
@@ -84,7 +120,7 @@ pdfInput.addEventListener("change", () => {
 
 function addFilesToQueue(fileList) {
   const files = Array.from(fileList);
-  const valid   = files.filter(f => f.type === "application/pdf");
+  const valid   = files.filter(isSupportedFile);
   const invalid = files.length - valid.length;
 
   valid.forEach(file => {
@@ -98,7 +134,7 @@ function addFilesToQueue(fileList) {
     const toast = document.createElement("div");
     toast.className = "alert alert-warning alert-dismissible fade show mt-2 py-2";
     toast.style.fontSize = "13px";
-    toast.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${invalid} file không phải PDF đã bị bỏ qua.
+    toast.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${invalid} file không được hỗ trợ đã bị bỏ qua. Chấp nhận: PDF, DOCX, DOC, TXT, RTF.
       <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>`;
     document.getElementById("file-queue").prepend(toast);
   }
@@ -121,7 +157,7 @@ function renderFileQueue() {
 
   container.innerHTML = fileQueue.map(item => `
     <div class="file-queue-item" id="fqi-${item.id}">
-      <i class="bi bi-file-earmark-pdf file-pdf-icon"></i>
+      <i class="${getFileIconClass(item.file.name)}"></i>
       <span class="file-name" title="${item.file.name}">${item.file.name}</span>
       <span class="file-size">${formatFileSize(item.file.size)}</span>
       <span class="file-status-badge ${item.status}" id="fqs-${item.id}"
@@ -216,21 +252,26 @@ async function loadDocuments() {
 function renderDocList() {
   const list = document.getElementById("doc-list");
   if (!documents.length) {
-    list.innerHTML = `<div class="empty-msg"><i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>Chưa có tài liệu nào. Hãy upload PDF trước.</div>`;
+    list.innerHTML = `<div class="empty-msg"><i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>Chưa có tài liệu nào. Hãy nạp tài liệu trước.</div>`;
     return;
   }
-  list.innerHTML = documents.map(doc => `
-    <div class="doc-card">
-      <span class="doc-name"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${doc.filename}</span>
+  list.innerHTML = documents.map(doc => {
+    const isPdf = (doc.filename || '').toLowerCase().endsWith('.pdf');
+    const cardClick = isPdf
+      ? `onclick="viewPdf('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')"`
+      : '';
+    const cardStyle = isPdf ? 'cursor:pointer;' : '';
+    const pdfHint = isPdf ? `<span class="text-muted small ms-2" style="font-size:0.75em;"><i class="bi bi-eye"></i></span>` : '';
+    return `
+    <div class="doc-card" ${cardClick} style="${cardStyle}">
+      <span class="doc-name">${getFileIcon(doc.filename)}${doc.filename}${pdfHint}</span>
       <div class="doc-actions">
-        <button class="btn btn-sm btn-primary rounded-pill" onclick="viewPdf('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
-          <i class="bi bi-eye me-1"></i>Xem PDF
-        </button>
-        <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteDocument('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
+        <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="event.stopPropagation();deleteDocument('${doc.doc_id}', '${doc.filename.replace(/'/g,"\\'")}')">
           <i class="bi bi-trash"></i>
         </button>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 async function viewDocument(docId) {
@@ -285,22 +326,26 @@ document.getElementById("doc-modal").addEventListener("click", e => {
     document.getElementById("doc-modal").classList.add("hidden");
 });
 
-// ── PDF Viewer ────────────────────────────────────────────────────────────────
+// ── File Viewer (PDF only) ─────────────────────────────────────────────────────
 function viewPdf(docId, filename) {
   const modal       = document.getElementById("pdf-modal");
   const iframe      = document.getElementById("pdf-iframe");
   const loading     = document.getElementById("pdf-loading");
   const errorBox    = document.getElementById("pdf-error");
   const title       = document.getElementById("pdf-modal-title");
+  const iconEl      = document.getElementById("pdf-modal-icon");
   const downloadBtn = document.getElementById("pdf-download-btn");
+  const downloadBtn2 = document.getElementById("pdf-download-btn2");
   const fallbackBtn = document.getElementById("pdf-fallback-btn");
 
   const pdfUrl = `${API_BASE}/api/documents/${docId}/pdf`;
 
   title.textContent = filename;
-  downloadBtn.href  = pdfUrl;
+  if (iconEl) iconEl.className = 'bi bi-file-earmark-pdf fs-5 text-danger';
+  downloadBtn.href = pdfUrl;
   downloadBtn.setAttribute("download", filename);
-  fallbackBtn.href  = pdfUrl;
+  if (downloadBtn2) { downloadBtn2.href = pdfUrl; downloadBtn2.setAttribute("download", filename); }
+  if (fallbackBtn) { fallbackBtn.href = pdfUrl; fallbackBtn.setAttribute("target", "_blank"); }
 
   // Reset state
   iframe.classList.add("hidden");
@@ -310,7 +355,6 @@ function viewPdf(docId, filename) {
 
   modal.classList.remove("hidden");
 
-  // Load PDF in iframe
   iframe.onload = () => {
     loading.classList.add("hidden");
     iframe.classList.remove("hidden");
@@ -322,13 +366,12 @@ function viewPdf(docId, filename) {
 
   iframe.src = pdfUrl;
 
-  // Fallback timeout — if iframe doesn't load in 8s, show error
   setTimeout(() => {
     if (!loading.classList.contains("hidden")) {
       loading.classList.add("hidden");
       errorBox.classList.remove("hidden");
     }
-  }, 8000);
+  }, 12000);
 }
 
 document.getElementById("close-pdf-modal").addEventListener("click", () => {
@@ -382,7 +425,7 @@ function renderDocChips() {
     chip.dataset.id = doc.doc_id;
     chip.title      = doc.filename;
     chip.innerHTML  = `
-      <i class="bi bi-file-earmark-pdf chip-pdf-icon"></i>
+      <i class="${getFileIconClass(doc.filename)}"></i>
       <span>${doc.filename}</span>
       <span class="ms-1 opacity-50" style="font-size:11px">${doc.num_pages}tr</span>`;
     chip.addEventListener("click", () => toggleDocChip(chip, doc.doc_id));
@@ -476,7 +519,7 @@ async function sendQuestion() {
   appendMessage("user", question);
   qaConversation.push({ role: "user", content: question });
 
-  const thinking = appendMessage("thinking", "Đang suy nghĩ...");
+  const thinking = appendMessage("thinking", "⏳ Chatbot đang đọc hiểu tài liệu...");
   const selectedIds = getSelectedDocIds(); // [] = all docs
 
   try {
@@ -513,7 +556,7 @@ document.getElementById("sum-btn").addEventListener("click", async () => {
   const result = document.getElementById("sum-result");
 
   if (!docId && !file) {
-    result.innerHTML = '<p class="text-danger">❌ Vui lòng chọn tài liệu hoặc upload file PDF.</p>';
+    result.innerHTML = '<p class="text-danger">❌ Vui lòng chọn tài liệu hoặc upload file (PDF, DOCX, DOC, TXT, RTF).</p>';
     result.classList.remove("hidden"); return;
   }
   if (docId && file) {
@@ -554,7 +597,7 @@ document.getElementById("ext-btn").addEventListener("click", async () => {
     result.classList.remove("hidden"); return;
   }
   if (!docId && !file) {
-    result.innerHTML = '<p class="text-danger">❌ Vui lòng chọn tài liệu hoặc upload file PDF.</p>';
+    result.innerHTML = '<p class="text-danger">❌ Vui lòng chọn tài liệu hoặc upload file (PDF, DOCX, DOC, TXT, RTF).</p>';
     result.classList.remove("hidden"); return;
   }
   if (docId && file) {
@@ -595,7 +638,18 @@ document.getElementById("filter-clear-all").addEventListener("click", clearAllDo
 document.getElementById("qa-clear-btn").addEventListener("click", () => {
   qaConversation = [];
   document.getElementById("chat-box").innerHTML = "";
+  showWelcomeMessage();
 });
+
+function showWelcomeMessage() {
+  const chatBox = document.getElementById("chat-box");
+  if (chatBox.querySelector(".chat-msg")) return;
+  const el = document.createElement("div");
+  el.className = "chat-msg assistant chat-welcome";
+  el.innerHTML = `<i class="bi bi-robot me-2 text-primary"></i><strong>Xin chào!</strong> Tôi là <strong>Chatbot Trợ Lý Đọc Hiểu Tài Liệu</strong>.<br/><br/>
+Hãy nạp tài liệu (PDF, DOCX, DOC, TXT, RTF) ở tab <em>Nạp Tài Liệu</em>, sau đó đặt câu hỏi — tôi sẽ đọc hiểu và trả lời dựa trên nội dung thực tế của tài liệu.`;
+  chatBox.appendChild(el);
+}
 
 document.getElementById("sum-clear-btn").addEventListener("click", () => {
   const r = document.getElementById("sum-result");
@@ -618,4 +672,5 @@ document.getElementById("ext-file").addEventListener("change", e => {
 
 checkHealth();
 setInterval(checkHealth, 30000);
+showWelcomeMessage();
 loadDocuments();

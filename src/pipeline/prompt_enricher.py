@@ -18,8 +18,8 @@ from typing import Dict, List, Optional
 from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
 from sentence_transformers import CrossEncoder
 
-from src.chain_service import ChainService
-from src.vector_db_ingestor import retrieve_similar_text
+from src.pipeline.chain_service import ChainService
+from src.embedding.vector_store import retrieve_similar_text
 
 logger = logging.getLogger(__name__)
 
@@ -485,6 +485,11 @@ class PromptEnricher:
 
     def __init__(self):
         self._chain_service = ChainService()
+        # Pre-build all FewShotPromptTemplates once at startup (not per request)
+        self._templates = {
+            t: self._build_few_shot_template(t)
+            for t in _FEW_SHOT_EXAMPLES
+        }
 
     # ---- private helpers ------------------------------------------ #
 
@@ -510,7 +515,7 @@ class PromptEnricher:
         1. Retrieve *candidate_k* chunks from FAISS (dense vector search).
         2. Rerank all candidates with a cross-encoder and return the top *top_k*.
         """
-        candidate_k = max(top_k * 3, 15)
+        candidate_k = min(top_k * 2, 10)  # reduced from top_k*3/15 for speed
         try:
             candidates = retrieve_similar_text(query, top_k=candidate_k, doc_ids=doc_ids)
         except Exception as exc:
@@ -548,7 +553,10 @@ class PromptEnricher:
         conversation_type : "documentQA" | "documentSummary" | "documentExtraction"
         doc_ids           : restrict RAG retrieval to specific documents (None = all docs)
         """
-        template = self._build_few_shot_template(conversation_type)
+        # Re-use pre-built template (no rebuild overhead per request)
+        template = self._templates.get(conversation_type)
+        if template is None:
+            raise ValueError(f"Unsupported conversation_type: '{conversation_type}'")
 
         if conversation_type == "documentQA":
             rag_context = self._retrieve_rag_context(user_input, doc_ids=doc_ids)

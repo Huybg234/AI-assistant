@@ -2,8 +2,36 @@
 Utility helpers shared across the application.
 """
 
+import os
 import logging
 from typing import Any, Dict
+
+SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".doc", ".txt", ".rtf"}
+SUPPORTED_MIME_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "text/plain",
+    "application/rtf",
+    "text/rtf",
+}
+MIME_TO_EXT = {
+    "application/pdf": ".pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/msword": ".doc",
+    "text/plain": ".txt",
+    "application/rtf": ".rtf",
+    "text/rtf": ".rtf",
+}
+EXT_TO_MIME = {
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".doc": "application/msword",
+    ".txt": "text/plain",
+    ".rtf": "application/rtf",
+}
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DOCS_DIR = os.path.join(_BASE_DIR, "documents")
 
 logger = logging.getLogger(__name__)
 

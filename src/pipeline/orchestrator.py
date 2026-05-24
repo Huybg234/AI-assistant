@@ -21,9 +21,9 @@ from typing import Any, Dict, List, Optional
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from src.postprocessor import Postprocessor, SafetyViolationError
-from src.preprocessor import Preprocessor
-from src.prompt_enricher import PromptEnricher
+from src.pipeline.postprocessor import Postprocessor, SafetyViolationError
+from src.pipeline.preprocessor import Preprocessor
+from src.pipeline.prompt_enricher import PromptEnricher
 
 logging.basicConfig(
     level=logging.INFO,

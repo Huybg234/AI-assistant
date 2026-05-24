@@ -1,0 +1,24 @@
+# Environment variables (API keys)
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.venv1/
+*.egg-info/
+
+# Vector DB / uploaded docs
+src/documents/
+src/faiss_index.idx
+src/mapping.npy
+
+# Logs
+*.log
+app.log
+
+# IDE
+.idea/
+.vscode/
